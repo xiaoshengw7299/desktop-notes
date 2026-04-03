@@ -30,7 +30,10 @@
 - 自动记住窗口位置和大小，多显示器安全恢复
 - 数据保存在安装目录的 `NotesData/notes.json`，**便于备份和迁移**
 
+![效果图](https://github.com/xiaoshengw7299/desktop-notes/blob/master/src/demo.png)
+
 ---
+
 
 ## 🚀 快速开始
 
