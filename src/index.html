@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';">
+  <title>桌面便签</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ── 标题栏 ── -->
+  <div class="title-bar">
+    <div class="title-bar-drag">
+      <span class="app-logo">✦</span>
+      <span class="app-name">便签</span>
+    </div>
+    <div class="title-bar-controls">
+      <button id="btnPin" class="ctrl-btn" title="固定置顶">
+        <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12">
+          <path d="M9.828.722a.5.5 0 0 1 .354.146l4.95 4.95a.5.5 0 0 1 0 .707c-.48.48-1.072.588-1.503.588-.177 0-.335-.018-.46-.039l-3.134 3.134a5.927 5.927 0 0 1 .16 1.013c.046.702-.032 1.687-.72 2.375a.5.5 0 0 1-.707 0l-2.829-2.828-3.182 3.182c-.195.195-1.219.902-1.414.707-.195-.195.512-1.22.707-1.414l3.182-3.182-2.828-2.829a.5.5 0 0 1 0-.707c.688-.688 1.673-.767 2.375-.72a5.922 5.922 0 0 1 1.013.16l3.134-3.133a2.772 2.772 0 0 1-.04-.461c0-.43.108-1.022.589-1.503a.5.5 0 0 1 .353-.146z"/>
+        </svg>
+      </button>
+      <button id="btnMinimize" class="ctrl-btn" title="最小化">
+        <svg viewBox="0 0 16 16" fill="currentColor" width="10" height="10">
+          <path d="M2 8a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11A.5.5 0 0 1 2 8z"/>
+        </svg>
+      </button>
+      <button id="btnClose" class="ctrl-btn close-btn" title="关闭">
+        <svg viewBox="0 0 16 16" fill="currentColor" width="10" height="10">
+          <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── 主体布局 ── -->
+  <div class="main-layout">
+
+    <!-- 左侧边栏 -->
+    <div class="sidebar">
+      <div class="sidebar-tabs" id="sidebarTabs">
+        <!-- 动态渲染 -->
+      </div>
+      <div class="sidebar-footer">
+        <div class="opacity-row">
+          <svg viewBox="0 0 16 16" fill="currentColor" width="11" height="11" class="opacity-icon">
+            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+            <path d="M8 13A5 5 0 1 0 8 3v10z"/>
+          </svg>
+          <input type="range" id="opacitySlider" min="20" max="100" value="93" class="opacity-slider">
+          <span class="opacity-value" id="opacityValue">93%</span>
+        </div>
+        <button id="btnSettings" class="settings-btn" title="设置">
+          <svg viewBox="0 0 16 16" fill="currentColor" width="13" height="13">
+            <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.892 3.433-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.892-1.64-.901-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/>
+            <path d="M8 5.754a2.246 2.246 0 1 0 0 4.492 2.246 2.246 0 0 0 0-4.492zM9.246 8a1.246 1.246 0 1 1-2.492 0 1.246 1.246 0 0 1 2.492 0z"/>
+          </svg>
+          <span>设置</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 右侧内容区 -->
+    <div class="content-area" id="contentArea">
+      <!-- 动态渲染 -->
+    </div>
+
+  </div>
+</div>
+
+<!-- ── 新建便签弹窗 ── -->
+<div id="addModal" class="modal-overlay hidden">
+  <div class="modal" role="dialog">
+    <div class="modal-header">
+      <span>新建便签</span>
+    </div>
+    <div class="modal-body">
+      <div class="type-selector" id="typeSelector">
+        <button class="type-btn active" data-type="text">
+          <div class="type-icon">📝</div>
+          <div class="type-name">文本</div>
+          <div class="type-desc">自由书写</div>
+        </button>
+        <button class="type-btn" data-type="list">
+          <div class="type-icon">☑</div>
+          <div class="type-name">列表</div>
+          <div class="type-desc">任务清单</div>
+        </button>
+      </div>
+      <div class="color-picker-row" id="colorPickerRow"></div>
+      <input type="text" id="newNoteTitle" placeholder="便签标题（可选）" maxlength="30" autocomplete="off">
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" id="cancelAdd">取消</button>
+      <button class="btn-primary" id="confirmAdd">创 建</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 设置面板 ── -->
+<div id="settingsPanel" class="settings-overlay hidden">
+  <div class="settings-panel" role="dialog">
+    <div class="settings-header">
+      <span>设置</span>
+      <button class="icon-btn" id="closeSettings" title="关闭">
+        <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12">
+          <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+        </svg>
+      </button>
+    </div>
+    <div class="settings-body">
+      <div class="setting-item">
+        <div class="setting-label">
+          <span>开机自启动</span>
+          <span class="setting-desc">登录系统时自动启动</span>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="autoStartToggle">
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+        </label>
+      </div>
+      <div class="setting-item">
+        <div class="setting-label">
+          <span>固定在顶层</span>
+          <span class="setting-desc">始终显示在其他窗口之上</span>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="alwaysOnTopToggle">
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+        </label>
+      </div>
+    </div>
+    <div class="settings-footer">
+      <span class="app-version">[@小生:741661769@qq.com]桌面便签 v1.0.0</span>
+    </div>
+  </div>
+</div>
+
+<script src="renderer.js"></script>
+</body>
+</html>
