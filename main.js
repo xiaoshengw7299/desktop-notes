@@ -1,8 +1,95 @@
-const { app, BrowserWindow, ipcMain, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const zlib = require('zlib');
 
 let mainWindow = null;
+let tray = null;
+let isQuitting = false;
+
+// ── 生成备用托盘图标（纯 Node.js，无依赖）────────────────────────────────────
+function crc32(buf) {
+  let crc = 0xFFFFFFFF;
+  for (let i = 0; i < buf.length; i++) {
+    crc ^= buf[i];
+    for (let j = 0; j < 8; j++) {
+      crc = (crc & 1) ? ((crc >>> 1) ^ 0xEDB88320) : (crc >>> 1);
+    }
+  }
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+
+function makePngChunk(type, data) {
+  const typeBuf = Buffer.from(type, 'ascii');
+  const len = Buffer.alloc(4);
+  len.writeUInt32BE(data.length);
+  const crcBuf = Buffer.alloc(4);
+  crcBuf.writeUInt32BE(crc32(Buffer.concat([typeBuf, data])));
+  return Buffer.concat([len, typeBuf, data, crcBuf]);
+}
+
+function createSolidPng(size, r, g, b) {
+  const sig = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(size, 0);
+  ihdr.writeUInt32BE(size, 4);
+  ihdr[8] = 8; ihdr[9] = 2;
+  const row = Buffer.alloc(1 + size * 3);
+  for (let x = 0; x < size; x++) {
+    row[1 + x * 3] = r; row[2 + x * 3] = g; row[3 + x * 3] = b;
+  }
+  const raw = Buffer.concat(Array(size).fill(row));
+  const idat = zlib.deflateSync(raw);
+  return Buffer.concat([
+    sig,
+    makePngChunk('IHDR', ihdr),
+    makePngChunk('IDAT', idat),
+    makePngChunk('IEND', Buffer.alloc(0)),
+  ]);
+}
+
+// ── 切换窗口显示/隐藏 ─────────────────────────────────────────────────────────
+function toggleWindow() {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  if (mainWindow.isVisible()) {
+    mainWindow.hide();
+  } else {
+    mainWindow.show();
+    mainWindow.focus();
+  }
+}
+
+// ── 创建系统托盘 ──────────────────────────────────────────────────────────────
+function createTray() {
+  const iconPath = path.join(__dirname, 'assets', 'icon.ico');
+  let trayIcon;
+  if (fs.existsSync(iconPath)) {
+    trayIcon = nativeImage.createFromPath(iconPath).resize({ width: 16, height: 16 });
+  } else {
+    trayIcon = nativeImage.createFromBuffer(createSolidPng(16, 250, 204, 20));
+  }
+
+  tray = new Tray(trayIcon);
+  tray.setToolTip('桌面便签');
+
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: '显示 / 隐藏',
+      click: toggleWindow,
+    },
+    { type: 'separator' },
+    {
+      label: '退出',
+      click: () => {
+        isQuitting = true;
+        app.quit();
+      },
+    },
+  ]);
+
+  tray.setContextMenu(contextMenu);
+  tray.on('click', toggleWindow);
+}
 
 // ── 数据目录（打包后在 exe 旁边，开发时在项目 data 目录）─────────────────────
 function getDataDir() {
@@ -75,6 +162,7 @@ function createWindow() {
     transparent: true,
     backgroundColor: '#00000000',
     alwaysOnTop,
+    skipTaskbar: true,
     ...iconOption,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -106,14 +194,22 @@ function createWindow() {
   });
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+  createTray();
+});
 
+// 有托盘时不因所有窗口关闭而退出
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+  if (process.platform !== 'darwin' && !tray) app.quit();
 });
 
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) createWindow();
+});
+
+app.on('before-quit', () => {
+  isQuitting = true;
 });
 
 // ── IPC 处理 ─────────────────────────────────────────────────────────────────
@@ -145,9 +241,10 @@ ipcMain.handle('get-auto-start', () => {
 });
 
 ipcMain.handle('window-minimize', () => {
-  mainWindow?.minimize();
+  mainWindow?.hide();
 });
 
 ipcMain.handle('window-close', () => {
-  mainWindow?.close();
+  isQuitting = true;
+  app.quit();
 });
